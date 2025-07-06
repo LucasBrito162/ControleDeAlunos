@@ -2,20 +2,37 @@ package com.alunocurso.ControleDeCursos.service;
 
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
+import com.alunocurso.ControleDeCursos.model.Curso;
 import com.alunocurso.ControleDeCursos.model.Estudante;
+import com.alunocurso.ControleDeCursos.repository.CursoRepository;
 import com.alunocurso.ControleDeCursos.repository.EstudanteRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
+@Service
 public class EstudanteService {
 
     private final EstudanteRepository estudanteRepository;
 
-    public EstudanteService(EstudanteRepository estudanteRepository) {
+    private final CursoRepository cursoRepository;
+
+    public EstudanteService(EstudanteRepository estudanteRepository, CursoRepository cursoRepository) {
         this.estudanteRepository = estudanteRepository;
+        this.cursoRepository = cursoRepository;
     }
 
     public Estudante create(Estudante estudante) {
+
+        List<Curso> validarCurso = estudante.getCursos().stream()
+                .map(curso -> cursoRepository.findById(curso.getId())
+                        .orElseThrow(
+                                () -> new EntityNotFoundException("Curso não encontrado com ID: " + curso.getId())))
+                .toList();
+
+        estudante.setCursos(validarCurso);
+
         return estudanteRepository.save(estudante);
     }
 
